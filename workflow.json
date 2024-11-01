@@ -1,0 +1,685 @@
+{
+  "name": "Codex Town • Ai Assistant Light",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "### Files from Google Drive to Supabase\n",
+        "height": 592.8246017235526,
+        "width": 1121.985384639484,
+        "color": 7
+      },
+      "id": "8df125ff-425f-472e-9cb1-a5cfcd3bc299",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1QPDp8m5jnq40yDiFTDacHrOShLHEHDQO",
+          "mode": "list",
+          "cachedResultName": "_codextown",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1QPDp8m5jnq40yDiFTDacHrOShLHEHDQO"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "id": "e8e72001-e19c-47d7-8c3f-8311b641b3d2",
+      "name": "File Updated",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        1122,
+        674
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "hORMxkZpTflYgK0X",
+          "name": "Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1QPDp8m5jnq40yDiFTDacHrOShLHEHDQO",
+          "mode": "list",
+          "cachedResultName": "_codextown",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1QPDp8m5jnq40yDiFTDacHrOShLHEHDQO"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "id": "28364702-d38a-4c4b-9a6c-e4bada8c28d4",
+      "name": "File Created",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        1122,
+        514
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "hORMxkZpTflYgK0X",
+          "name": "Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "=file_id",
+                "value": "={{ $('setFileID').item.json.file_id }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "52576501-92a3-4ffd-a44e-607f981faaae",
+      "name": "docsDataLoader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        1962,
+        754
+      ]
+    },
+    {
+      "parameters": {
+        "chunkSize": 5000,
+        "chunkOverlap": 500,
+        "options": {}
+      },
+      "id": "d78f2771-c143-4411-80f4-3515bf111754",
+      "name": "textSplitter(5000-500)",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1862,
+        914
+      ]
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "id": "e3c1a7e5-b70f-41f0-9d51-b60927f7c2e8",
+      "name": "embedOpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1,
+      "position": [
+        1862,
+        754
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "nAEdlD50L2C9YOQC",
+          "name": "OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "10646eae-ae46-4327-a4dc-9987c2d76173",
+              "name": "file_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "1b929fc2-a483-4d2e-81fa-8b6cb73539dd",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "b579ffc2-a1c7-4234-8053-f4dda8fd490b",
+              "name": "fileExtension",
+              "value": "={{ $json.fileExtension }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "193d15dc-4617-4efe-95c0-7e93af0f7598",
+      "name": "setFileID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1282,
+        594
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "documents",
+        "filterType": "string",
+        "filterString": "=metadata->>file_id=like.*{{ $json.file_id }}*"
+      },
+      "id": "c79f6135-03ea-4341-9dae-7cd4ade77cb7",
+      "name": "deleteOutdated",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1422,
+        594
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "zXs0qtKkRnyqQdyw",
+          "name": "Supabase Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('setFileID').item.json.file_id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "text/plain"
+            }
+          }
+        }
+      },
+      "id": "72d5b1df-2784-43c8-952d-b34e01528aa0",
+      "name": "downloadFile",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1562,
+        594
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "hORMxkZpTflYgK0X",
+          "name": "Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "id": "5768b613-13b5-4a81-9aa1-d4a22e6feece",
+      "name": "extractFromTEXT",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1702,
+        594
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "content": "### Documents Retrieval",
+        "height": 388.6174095656446,
+        "width": 478.5467941611346,
+        "color": 2
+      },
+      "id": "d617c4a3-b206-44d1-81ea-a421f71ab240",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1580,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "6aa8d231-3845-4974-8bd9-4e8337c5aa80",
+      "name": "Calculator",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "temperature": 0.6
+        }
+      },
+      "id": "39aaa4bb-fac9-4ee3-b0ac-4a4efa49af36",
+      "name": "4o-mini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        240
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "nAEdlD50L2C9YOQC",
+          "name": "OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "id": "d1611e11-4a47-48ab-98cd-fe4bdec76f08",
+      "name": "OpenAI Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        260
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "nAEdlD50L2C9YOQC",
+          "name": "OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "user_documents",
+        "description": "Use this to retrieve data from vector storage",
+        "topK": 25
+      },
+      "id": "da439a85-f72b-4bed-9e0a-5d0f4fff533f",
+      "name": "user_documents",
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        1800,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### LLM\n\n",
+        "height": 216.27588142425193,
+        "width": 476.0818469346989
+      },
+      "id": "ee1db12f-9e90-4b84-9fb4-d1f36a91afdb",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1083,
+        175
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a personal assistant who helps answer questions using additional sources of knowledge, besides your general knowledge:\n- A corpus of documents when you don't know the answer yourself. Use it, before answering the question\n\n",
+          "passthroughBinaryImages": true
+        }
+      },
+      "id": "f7f7ad16-8d47-4e6f-9fc0-c042d9d3e168",
+      "name": "assistantAgent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        1280,
+        -200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "content": "### Tools\n",
+        "height": 152.42565449909426,
+        "width": 482.0086812812084,
+        "color": 2
+      },
+      "id": "f0797bc8-0006-4f0e-accf-93c33c5de767",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "id": "725d4f5b-0f26-48ad-92d4-07a1be56e556",
+      "name": "insertDocs2Supabase",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1,
+      "position": [
+        1842,
+        594
+      ],
+      "retryOnFail": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "zXs0qtKkRnyqQdyw",
+          "name": "Supabase Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "id": "58affd80-ab55-4eca-82fe-3f3a01033836",
+      "name": "match_documents",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        140
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "zXs0qtKkRnyqQdyw",
+          "name": "Supabase Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 15
+      },
+      "id": "bbb1061c-daea-4ff1-980a-52c3f0fd0271",
+      "name": "chatLogs",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [
+        1340,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Привет! 👋\nЯ ИИ-ассистент сообщества Codex Town. Как я могу помочь?",
+        "options": {}
+      },
+      "id": "bc0e8da3-c9a5-4b2d-b148-fd4f4d24aa25",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        1060,
+        -200
+      ],
+      "webhookId": "c4f8437a-44d5-4a99-afe9-51b3f905eef0"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "File Updated": {
+      "main": [
+        [
+          {
+            "node": "setFileID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File Created": {
+      "main": [
+        [
+          {
+            "node": "setFileID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "docsDataLoader": {
+      "ai_document": [
+        [
+          {
+            "node": "insertDocs2Supabase",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "textSplitter(5000-500)": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "docsDataLoader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "embedOpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "insertDocs2Supabase",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "setFileID": {
+      "main": [
+        [
+          {
+            "node": "deleteOutdated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "deleteOutdated": {
+      "main": [
+        [
+          {
+            "node": "downloadFile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "downloadFile": {
+      "main": [
+        [
+          {
+            "node": "extractFromTEXT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extractFromTEXT": {
+      "main": [
+        [
+          {
+            "node": "insertDocs2Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "assistantAgent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4o-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "user_documents",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "assistantAgent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "match_documents",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "user_documents": {
+      "ai_tool": [
+        [
+          {
+            "node": "assistantAgent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "match_documents": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "user_documents",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chatLogs": {
+      "ai_memory": [
+        [
+          {
+            "node": "assistantAgent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "assistantAgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Bangkok",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "21f5f996-14ef-4cee-b571-610ddffeadc0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "49cf91d78d8ef3230140a15ab66d93ef2112fde54bcee704b5df483e6b70b1d7"
+  },
+  "id": "Z64YhI9Ri7QAmMrM",
+  "tags": [
+    {
+      "createdAt": "2024-10-23T09:34:42.305Z",
+      "updatedAt": "2024-10-23T09:34:42.305Z",
+      "id": "TXIk2K3v3utmpkDk",
+      "name": "vectorization"
+    },
+    {
+      "createdAt": "2024-10-17T05:53:20.608Z",
+      "updatedAt": "2024-10-17T05:53:20.608Z",
+      "id": "yo1mMSZdEO0upe5V",
+      "name": "codextown"
+    }
+  ]
+}
